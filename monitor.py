@@ -121,11 +121,11 @@ def generate_cw_message(time_in_utc, success_count, failure_count, latency):
 
 
 while True:
+    time_utc = datetime.utcnow()
     try:
         time.sleep(HTTP_REQUEST_FREQUENCY_SECONDS)
         logger.debug("queue size: {}".format(q.qsize()))
         r = requests.get("http://www.google.com", timeout=5)
-        time_utc = datetime.utcnow()
         output_text = "{},{},{},{}".format(time_utc, r.status_code, r.reason, r.elapsed)
 
         q.put(generate_cw_message(time_utc, 1, 0, r.elapsed.total_seconds() * 1000))
