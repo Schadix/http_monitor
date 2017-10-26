@@ -61,7 +61,7 @@ for i in range(num_worker_threads):
     threads.append(t)
 
 
-def generate_cw_message(success_count, failure_count, latency):
+def generate_cw_message(time_in_utc, success_count, failure_count, latency):
     logger.info("generate_cw_message. success: {}, failure: {}, latency: {}"
                 .format(success_count, failure_count, latency))
     if failure_count > 0 and success_count < 1:
@@ -73,7 +73,7 @@ def generate_cw_message(success_count, failure_count, latency):
                     'Value': 'pi'
                 },
             ],
-            'Timestamp': datetime.now(),
+            'Timestamp': time_in_utc,
             'Value': failure_count,
             'Unit': 'Count'
         }]
@@ -87,7 +87,7 @@ def generate_cw_message(success_count, failure_count, latency):
                         'Value': 'pi'
                     },
                 ],
-                'Timestamp': datetime.now(),
+                'Timestamp': time_in_utc,
                 'Value': success_count,
                 'Unit': 'Count'
             },
@@ -99,7 +99,7 @@ def generate_cw_message(success_count, failure_count, latency):
                         'Value': 'pi'
                     },
                 ],
-                'Timestamp': datetime.now(),
+                'Timestamp': time_in_utc,
                 'Value': failure_count,
                 'Unit': 'Count'
             },
@@ -111,7 +111,7 @@ def generate_cw_message(success_count, failure_count, latency):
                         'Value': 'pi'
                     },
                 ],
-                'Timestamp': datetime.now(),
+                'Timestamp': time_in_utc,
                 'Value': latency,
                 'Unit': 'Milliseconds'
             }
@@ -125,9 +125,10 @@ while True:
         time.sleep(HTTP_REQUEST_FREQUENCY_SECONDS)
         logger.debug("queue size: {}".format(q.qsize()))
         r = requests.get("http://www.google.com", timeout=5)
-        output_text = "{},{},{},{}".format(datetime.now(), r.status_code, r.reason, r.elapsed)
+        time_utc = datetime.utcnow()
+        output_text = "{},{},{},{}".format(time_utc, r.status_code, r.reason, r.elapsed)
 
-        q.put(generate_cw_message(1, 0, r.elapsed.total_seconds() * 1000))
+        q.put(generate_cw_message(time_utc, 1, 0, r.elapsed.total_seconds() * 1000))
         logger.info(output_text)
     except (HTTPError, Timeout, ConnectionError) as inst:
         q.put(generate_cw_message(0, 1, 0))
@@ -135,7 +136,7 @@ while True:
     except Exception as e:
         q.put(generate_cw_message(0, 1, 0))
         # block until all tasks are done
-        q.join()
+        # q.join()
         logger.error(e)
         # stop workers
         # for i in range(num_worker_threads):
