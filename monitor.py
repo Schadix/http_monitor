@@ -131,10 +131,10 @@ while True:
         q.put(generate_cw_message(time_utc, 1, 0, r.elapsed.total_seconds() * 1000))
         logger.info(output_text)
     except (HTTPError, Timeout, ConnectionError) as inst:
-        q.put(generate_cw_message(0, 1, 0))
+        q.put(generate_cw_message(time_utc, 0, 1, 0))
         logger.error(inst)
     except Exception as e:
-        q.put(generate_cw_message(0, 1, 0))
+        q.put(generate_cw_message(time_utc, 0, 1, 0))
         # block until all tasks are done
         # q.join()
         logger.error(e)
